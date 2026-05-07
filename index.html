@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Tool Diagnostic — Staff</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#EDE8DF;--s1:#FAF8F4;--s2:#F2EDE5;
+  --bd:#DDD6CB;--bd2:#C5BBAC;
+  --tx:#1C1814;--tm:#7A6E62;--td:#B0A393;
+  --gold:#9B6C14;--gl:rgba(155,108,20,.07);--gb:rgba(155,108,20,.22);
+  --sage:#4A7856;--r:14px;--rs:9px;
+}
+html,body{height:100%;min-height:100vh}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;font-weight:300;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:36px 16px 56px;-webkit-font-smoothing:antialiased}
+.wrap{width:100%;max-width:580px}
+.prog{position:fixed;top:0;left:0;right:0;height:2px;background:var(--bd);z-index:200}
+.prog-f{height:100%;background:linear-gradient(90deg,#7A5010,var(--gold));transition:width .55s cubic-bezier(.4,0,.2,1)}
+.sc{display:none;opacity:0;transform:translateY(10px);transition:opacity .38s ease,transform .38s ease}
+.sc.in{display:block;opacity:0;transform:translateY(12px)}
+.sc.visible{opacity:1;transform:translateY(0)}
+
+/* ── INTRO ── */
+.i-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:52px 44px;position:relative;overflow:hidden;box-shadow:0 2px 24px rgba(100,80,40,.06)}
+.i-card::before{content:'';position:absolute;top:-70px;right:-70px;width:240px;height:240px;background:radial-gradient(circle,rgba(155,108,20,.07) 0%,transparent 68%);pointer-events:none}
+.i-card::after{content:'';position:absolute;bottom:-50px;left:-50px;width:160px;height:160px;background:radial-gradient(circle,rgba(74,120,86,.05) 0%,transparent 70%);pointer-events:none}
+.i-eye{font-size:9.5px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:22px}
+.i-title{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,5.5vw,46px);font-weight:500;line-height:1.1;color:var(--tx);margin-bottom:20px}
+.i-title em{font-style:italic;color:var(--gold)}
+.i-body{font-size:14.5px;line-height:1.8;color:var(--tm);margin-bottom:36px;max-width:420px}
+.i-pills{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:40px}
+.pill{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--td)}
+.pill-dot{width:4px;height:4px;border-radius:50%;background:var(--gold);opacity:.6;flex-shrink:0}
+.i-foot{display:flex;align-items:center;justify-content:space-between}
+
+/* ── BUTTONS ── */
+.btn-p{background:var(--gold);color:#fff;border:none;border-radius:var(--rs);padding:13px 26px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:500;cursor:pointer;letter-spacing:.02em;transition:all .2s;box-shadow:0 2px 12px rgba(155,108,20,.25)}
+.btn-p:hover{background:#8A5C0A;box-shadow:0 4px 20px rgba(155,108,20,.3);transform:translateY(-1px)}
+.btn-p:active{transform:scale(.98)}
+.btn-p:disabled{opacity:.3;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-g{background:none;border:1px solid var(--bd2);color:var(--tm);border-radius:var(--rs);padding:11px 20px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:all .2s}
+.btn-g:hover{border-color:var(--tm);color:var(--tx)}
+.btn-g:disabled{opacity:.3;cursor:not-allowed}
+.btn-lnk{background:none;border:none;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--td);cursor:pointer;letter-spacing:.04em;transition:color .2s}
+.btn-lnk:hover{color:var(--tm)}
+
+/* ── QUIZ ── */
+.q-wrap{padding-top:10px}
+.q-meta{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:42px}
+.q-big{font-family:'Cormorant Garamond',serif;font-size:68px;font-weight:400;color:var(--bd2);line-height:1;letter-spacing:-.02em}
+.q-label{font-size:11px;color:var(--td);letter-spacing:.1em}
+.q-con{transition:opacity .22s ease,transform .22s ease}
+.q-con.out{opacity:0;transform:translateX(-16px)}
+.q-con.coming{opacity:0;transform:translateX(16px)}
+.q-text{font-family:'Cormorant Garamond',serif;font-size:clamp(21px,3.8vw,29px);font-weight:500;line-height:1.38;color:var(--tx);margin-bottom:28px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:flex-start;gap:14px;padding:16px 18px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;text-align:left;width:100%;font-family:'DM Sans',sans-serif;transition:border-color .18s,background .18s,transform .18s;box-shadow:0 1px 4px rgba(100,80,40,.04)}
+.opt:hover{border-color:var(--bd2);background:var(--s2);transform:translateX(4px)}
+.opt.sel{border-color:var(--gb);background:var(--gl)}
+.opt-l{width:25px;height:25px;border-radius:50%;border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:10.5px;font-weight:500;color:var(--td);flex-shrink:0;transition:all .18s;margin-top:2px}
+.opt.sel .opt-l{background:var(--gold);border-color:var(--gold);color:#fff}
+.opt-t{font-size:13.5px;line-height:1.65;color:var(--tm);transition:color .18s}
+.opt.sel .opt-t{color:var(--tx)}
+.sc-lbr{display:flex;justify-content:space-between;font-size:11px;color:var(--td);margin-bottom:11px;letter-spacing:.02em}
+.sc-row{display:flex;gap:7px;margin-bottom:14px}
+.sc-btn{flex:1;height:54px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--rs);font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--tm);cursor:pointer;transition:all .18s;box-shadow:0 1px 4px rgba(100,80,40,.04)}
+.sc-btn:hover{border-color:var(--bd2);background:var(--s2);color:var(--tx)}
+.sc-btn.sel{border-color:var(--gb);background:var(--gl);color:var(--gold)}
+.sc-note{font-size:11.5px;color:var(--td);line-height:1.6;font-style:italic}
+.q-nav{display:flex;justify-content:flex-end;margin-top:28px}
+
+/* ── PROCESSING ── */
+.proc{min-height:72vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.proc-ring{width:44px;height:44px;border:1.5px solid var(--bd2);border-top-color:var(--gold);border-radius:50%;animation:spin 1.1s linear infinite;margin-bottom:32px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.proc-t{font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:500;color:var(--tx);margin-bottom:10px}
+.proc-s{font-size:12px;color:var(--td);letter-spacing:.05em;min-height:18px;transition:opacity .35s}
+.proc-s.fade{opacity:0}
+
+/* ── PROFILE ── */
+.pr-eye{font-size:9.5px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:18px}
+.pr-title{font-family:'Cormorant Garamond',serif;font-size:clamp(30px,5vw,44px);font-weight:500;line-height:1.1;color:var(--tx);margin-bottom:36px}
+.pri-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:20px 24px;margin-bottom:36px;opacity:0;transform:translateY(10px);transition:opacity .5s ease,transform .5s ease;box-shadow:0 1px 8px rgba(100,80,40,.05)}
+.pri-card.vis{opacity:1;transform:translateY(0)}
+.pri-hd{font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--td);margin-bottom:16px}
+.pri-row{display:flex;align-items:center;gap:14px;margin-bottom:11px}
+.pri-row:last-child{margin-bottom:0}
+.pri-nm{font-size:12px;color:var(--tm);width:155px;flex-shrink:0}
+.pri-tr{flex:1;height:2px;background:var(--bd);border-radius:1px;overflow:hidden}
+.pri-fi{height:100%;background:linear-gradient(90deg,#7A5010,var(--gold));border-radius:1px;width:0;transition:width .85s cubic-bezier(.4,0,.2,1)}
+.pri-ct{font-size:11px;color:var(--td);width:14px;text-align:right;flex-shrink:0}
+.para-wrap{margin-bottom:44px;opacity:0;transform:translateY(8px);transition:opacity .4s ease,transform .4s ease}
+.para-wrap.vis{opacity:1;transform:translateY(0)}
+.para-text{font-family:'Cormorant Garamond',serif;font-size:clamp(17px,2.8vw,20px);font-weight:400;line-height:1.9;color:var(--tx)}
+.wd{opacity:0;transition:opacity .35s ease;display:inline}
+.wd.vis{opacity:1}
+.pr-foot{display:flex;justify-content:space-between;align-items:center;gap:20px;padding-top:28px;border-top:1px solid var(--bd)}
+.pr-note{font-size:11.5px;color:var(--td);line-height:1.6;max-width:230px}
+
+/* ── THANKS ── */
+.ty-wrap{min-height:72vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+.ty-ring{width:48px;height:48px;border-radius:50%;border:1.5px solid var(--sage);display:flex;align-items:center;justify-content:center;margin-bottom:28px}
+.ty-title{font-family:'Cormorant Garamond',serif;font-size:36px;font-weight:500;color:var(--tx);margin-bottom:14px}
+.ty-body{font-size:13.5px;color:var(--tm);line-height:1.85;max-width:360px;margin-bottom:36px}
+.ty-div{width:1px;height:32px;background:var(--bd2);margin:0 auto 24px}
+
+/* ── ADMIN LOGIN ── */
+.al-card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:40px;box-shadow:0 2px 20px rgba(100,80,40,.06)}
+.al-title{font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:500;color:var(--tx);margin-bottom:8px}
+.al-sub{font-size:13px;color:var(--tm);line-height:1.65;margin-bottom:26px}
+.al-in{width:100%;background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:12px 15px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--tx);margin-bottom:6px;outline:none;transition:border-color .2s}
+.al-in:focus{border-color:var(--gb)}
+.al-err{font-size:12px;color:#A04030;min-height:18px;margin-bottom:14px}
+.al-row{display:flex;gap:10px}
+
+/* ── ADMIN DASH ── */
+.ad-hd{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.ad-title{font-family:'Cormorant Garamond',serif;font-size:34px;font-weight:500;color:var(--tx)}
+.ad-meta{font-size:12px;color:var(--td);margin-bottom:20px}
+.sheets-banner{display:flex;align-items:center;gap:10px;padding:12px 16px;border-radius:var(--rs);margin-bottom:20px;font-size:12px;line-height:1.5}
+.sheets-banner.connected{background:rgba(74,120,86,.08);border:1px solid rgba(74,120,86,.25);color:var(--sage)}
+.sheets-banner.disconnected{background:rgba(155,108,20,.07);border:1px solid rgba(155,108,20,.2);color:var(--gold)}
+.sheets-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-green{background:var(--sage)}
+.dot-amber{background:var(--gold)}
+.sg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.sc2{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rs);padding:18px;text-align:center;box-shadow:0 1px 6px rgba(100,80,40,.04)}
+.sv2{font-family:'Cormorant Garamond',serif;font-size:30px;color:var(--tx);margin-bottom:4px}
+.sl2{font-size:10px;color:var(--td);letter-spacing:.08em;text-transform:uppercase}
+.ad-sec{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:22px;margin-bottom:14px;box-shadow:0 1px 6px rgba(100,80,40,.04)}
+.ad-st{font-size:9px;font-weight:500;letter-spacing:.18em;text-transform:uppercase;color:var(--td);margin-bottom:18px}
+.b-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.b-row:last-child{margin-bottom:0}
+.b-nm{font-size:12.5px;color:var(--tm);width:120px;flex-shrink:0}
+.b-tr{flex:1;height:3px;background:var(--bd);border-radius:2px;overflow:hidden}
+.b-fi{height:100%;background:linear-gradient(90deg,#7A5010,var(--gold));border-radius:2px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.b-pc{font-size:11px;color:var(--td);width:30px;text-align:right}
+.sub-item{border:1px solid var(--bd);border-radius:var(--rs);overflow:hidden;margin-bottom:8px;background:var(--s1)}
+.sub-hd2{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--s2);border-bottom:1px solid var(--bd)}
+.sub-badge{font-size:9.5px;font-weight:500;letter-spacing:.07em;text-transform:uppercase;padding:3px 9px;border-radius:99px}
+.badge-c{background:rgba(50,90,180,.1);color:#3A5FB0}
+.badge-n{background:rgba(50,130,80,.1);color:#2E7A4A}
+.badge-s{background:rgba(155,108,20,.12);color:#8A5E0A}
+.sub-ts{font-size:10.5px;color:var(--td)}
+.sub-del{font-size:10.5px;color:var(--td);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif}
+.sub-del:hover{color:#A04030}
+.sub-body2{padding:14px}
+.sub-para{font-family:'Cormorant Garamond',serif;font-size:15px;line-height:1.8;color:var(--tm)}
+.empty-m{font-size:13px;color:var(--td);text-align:center;padding:40px 0;line-height:1.7}
+.rlnk{font-size:11px;color:var(--td);background:none;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;text-decoration:underline;margin-top:8px;display:block}
+.rlnk:hover{color:var(--tm)}
+</style>
+</head>
+<body>
+<div class="prog"><div class="prog-f" id="pf" style="width:0%"></div></div>
+<div class="wrap">
+
+  <div class="sc" id="s-intro">
+    <div class="i-card">
+      <p class="i-eye">Teaching &amp; AI — Staff Diagnostic</p>
+      <h1 class="i-title">What does your<br><em>teaching practice</em><br>actually need?</h1>
+      <p class="i-body">This short diagnostic explores your current workload and classroom priorities. It takes around two to three minutes and produces a personalised profile of your professional practice. There are no right or wrong answers.</p>
+      <div class="i-pills">
+        <span class="pill"><span class="pill-dot"></span>6 questions</span>
+        <span class="pill"><span class="pill-dot"></span>2–3 minutes</span>
+        <span class="pill"><span class="pill-dot"></span>Confidential</span>
+      </div>
+      <div class="i-foot">
+        <button class="btn-p" id="start-btn">Begin diagnostic</button>
+        <button class="btn-lnk" id="admin-lnk">Admin</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sc" id="s-quiz">
+    <div class="q-wrap">
+      <div class="q-meta">
+        <span class="q-big" id="q-num">01</span>
+        <span class="q-label" id="q-lbl">of 6</span>
+      </div>
+      <div class="q-con" id="q-con"></div>
+      <div class="q-nav"><button class="btn-g" id="q-next" disabled>Next</button></div>
+    </div>
+  </div>
+
+  <div class="sc" id="s-proc">
+    <div class="proc">
+      <div class="proc-ring"></div>
+      <p class="proc-t">Building your profile</p>
+      <p class="proc-s" id="proc-s">Reading your responses…</p>
+    </div>
+  </div>
+
+  <div class="sc" id="s-profile">
+    <p class="pr-eye">Your teaching profile</p>
+    <h2 class="pr-title">What your practice<br>tells us</h2>
+    <div class="pri-card" id="pri-card">
+      <p class="pri-hd">Priority areas</p>
+      <div id="pri-bars"></div>
+    </div>
+    <div class="para-wrap" id="para-wrap">
+      <p class="para-text" id="para-text"></p>
+    </div>
+    <div class="pr-foot">
+      <p class="pr-note">Your profile will be reviewed by school leadership to guide how AI tools are introduced.</p>
+      <button class="btn-p" id="submit-btn" disabled>Submit profile</button>
+    </div>
+  </div>
+
+  <div class="sc" id="s-thanks">
+    <div class="ty-wrap">
+      <div class="ty-ring">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="#4A7856" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 9 7 13 15 5"/></svg>
+      </div>
+      <h2 class="ty-title">Profile submitted</h2>
+      <p class="ty-body">Thank you for taking the time to complete this diagnostic. Your responses have been recorded and will inform how AI tools are introduced and supported across the school. No further action is required from you.</p>
+      <div class="ty-div"></div>
+      <button class="btn-lnk" id="restart-btn">Start again</button>
+    </div>
+  </div>
+
+  <div class="sc" id="s-adminlogin">
+    <div class="al-card">
+      <p class="al-title">Admin access</p>
+      <p class="al-sub">Enter the admin password to view staff results. This area is for school leadership and designated coordinators only.</p>
+      <input class="al-in" id="al-pw" type="password" placeholder="Password" autocomplete="off">
+      <p class="al-err" id="al-err"></p>
+      <div class="al-row">
+        <button class="btn-g" id="al-cancel">Cancel</button>
+        <button class="btn-p" id="al-go">Sign in</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sc" id="s-admin">
+    <div class="ad-hd">
+      <p class="ad-title">Staff results</p>
+      <button class="btn-lnk" id="ad-out">Sign out</button>
+    </div>
+    <p class="ad-meta" id="ad-meta"></p>
+    <div id="sheets-status"></div>
+    <div id="ad-content"></div>
+  </div>
+
+</div>
+<script>
+// ─────────────────────────────────────────────────────────────
+//  PASTE YOUR APPS SCRIPT URL BETWEEN THE QUOTES BELOW
+// ─────────────────────────────────────────────────────────────
+const SHEETS_URL = '';
+// ─────────────────────────────────────────────────────────────
+
+const PASS = 'teach2026';
+const PRI = {S:'Planning & programming', C:'Classroom engagement', N:'Independent learning'};
+const BADGE = {C:{label:'Claude',cls:'badge-c'}, N:{label:'NotebookLM',cls:'badge-n'}, S:{label:'Spark',cls:'badge-s'}};
+
+const QS = [
+  {type:'mc', q:'What takes the most time in your weekly planning?', opts:[
+    {t:'Writing unit plans, lesson outlines, or scope and sequences', v:'S'},
+    {t:'Designing engaging tasks, activities, or learning experiences', v:'C'},
+    {t:'Creating revision materials or resources for students to use independently', v:'N'}
+  ]},
+  {type:'mc', q:'Which challenge feels most pressing for your students right now?', opts:[
+    {t:'Students need better support for independent revision and study', v:'N'},
+    {t:'Students need more engaging, interactive learning experiences in class', v:'C'},
+    {t:'Learning is not yet well sequenced or tied to curriculum requirements', v:'S'}
+  ]},
+  {type:'mc', q:'How would you most like to use AI in your teaching practice?', opts:[
+    {t:"To generate lesson plans and programs aligned to our school's context", v:'S'},
+    {t:'To build interactive tasks, simulations, or scenario-based activities', v:'C'},
+    {t:'To give students a safe study resource built from my own materials', v:'N'}
+  ]},
+  {type:'mc', q:'What would have the most impact on your workload this term?', opts:[
+    {t:'Drafting scope and sequences or unit overviews more quickly', v:'S'},
+    {t:'Having access to a wider range of curriculum-aligned student tasks', v:'C'},
+    {t:'Setting up study support that students can access independently', v:'N'}
+  ]},
+  {type:'mc', q:'Which best describes your primary goal for AI in your classroom?', opts:[
+    {t:'Tutor and support students using resources I have provided', v:'N'},
+    {t:'Help me create interactive, subject-specific learning experiences', v:'C'},
+    {t:'Help me plan and program more efficiently across the year', v:'S'}
+  ]},
+  {type:'scale', q:'How important is data privacy and security when considering AI tools?',
+   low:'Not a priority', high:'A critical factor',
+   note:'This helps us understand the level of data governance that matters most in your context.',
+   map:{1:'C',2:'C',3:'N',4:'S',5:'S'}}
+];
+
+let answers = [], scaleRaw = null, cur = 0;
+
+function generateParagraph(answers, scale) {
+  const cnt = {S:0, C:0, N:0};
+  answers.slice(0,5).forEach(a => { if(a?.v) cnt[a.v]++; });
+  const sorted = Object.entries(cnt).sort((a,b) => b[1]-a[1]);
+  const [top, topN] = sorted[0], [sec] = sorted[1];
+
+  let privacy = '';
+  if (scale <= 2) privacy = ' You approach new tools pragmatically, and are open to exploring what they can offer across different platforms and contexts.';
+  else if (scale === 3) privacy = ' You are measured in how you adopt new tools, and value working within frameworks that are already established and trusted.';
+  else privacy = ' The question of how and where data is managed is not incidental for you — it is part of how you evaluate any tool or system that enters your professional environment.';
+
+  let core = '';
+  if (topN >= 4) {
+    if (top === 'S') core = "Your practice is built on a foundation of structure. The curriculum framework — the sequencing, the unit outlines, the coherent architecture that determines what students encounter and when — is where you invest most of your professional energy. You are a systematic thinker, and you believe that getting the foundations right is what makes everything else in the classroom possible. This kind of work is not always visible to others, but it is what grounds a school's learning culture over time.";
+    else if (top === 'C') core = "What drives your practice is the quality of what actually happens in the room. You are invested in the experience of learning — in the moments where students are genuinely absorbed, where something clicks, where an idea lands in a way that stays with them. Designing those experiences takes considerable time and creative effort, and you make that investment willingly. You tend to think about learning from the student's perspective first, and let that shape everything else.";
+    else core = "Your teaching is shaped by a consistent belief in the value of student agency. You invest considerably in building the conditions and resources that allow students to learn beyond the classroom — to revise, revisit, and make sense of content on their own terms. This reflects both a genuine care for student independence and a practical recognition that what students do when you are not there matters just as much as what happens when you are.";
+  } else {
+    const pair = [top, sec].sort().join('+');
+    if (pair === 'C+S') core = "Your practice sits at the intersection of structure and experience. You are drawn in equal measure to the integrity of the curriculum framework and to the quality of what students encounter within it — a dual responsibility that places real demands on your time and creativity. The planning work grounds you, but you bring the same level of care to the individual lesson. You are a teacher who holds both levels of thinking simultaneously, and that is rarer than it might seem.";
+    else if (pair === 'N+S') core = "Your professional priorities span both the architecture of learning and the conditions for student success beyond it. You invest in planning that is coherent and curriculum-aligned, and you think carefully about how students can access and make use of knowledge independently. These two orientations — designing the structure and then enabling the student within it — reflect a broad and considered view of what teaching actually involves.";
+    else if (pair === 'C+N') core = "At the centre of your practice is a consistent focus on the student experience — both what students encounter in the classroom and their capacity to keep learning once they leave it. You are invested in genuine engagement, and in building resources that make independent study feel meaningful rather than perfunctory. This reflects a teaching philosophy that takes seriously what happens before and after the lesson itself.";
+    else core = "Your practice reflects a breadth of professional investment that is genuinely unusual. You are attentive to curriculum structure, committed to engaging classroom experiences, and aware of what students need to learn independently — and you carry all three of these priorities simultaneously. This suggests a teacher whose view of the role is expansive, and whose workload tends to reflect that.";
+  }
+  return core + privacy;
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.sc').forEach(s => { s.classList.remove('in','visible'); s.style.display = 'none'; });
+  const el = document.getElementById(id);
+  el.style.display = 'block'; el.classList.add('in');
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('visible')));
+}
+function setProgress(n, tot) { document.getElementById('pf').style.width = Math.round((n/tot)*100) + '%'; }
+
+function renderQ(i) {
+  document.getElementById('q-num').textContent = String(i+1).padStart(2,'0');
+  const q = QS[i], con = document.getElementById('q-con'), LETS = ['A','B','C'];
+  let h = `<p class="q-text">${q.q}</p>`;
+  if (q.type === 'mc') {
+    h += '<div class="opts">' + q.opts.map((o,oi) =>
+      `<button class="opt" data-v="${o.v}" type="button"><span class="opt-l">${LETS[oi]}</span><span class="opt-t">${o.t}</span></button>`
+    ).join('') + '</div>';
+  } else {
+    h += `<div class="sc-lbr"><span>${q.low}</span><span>${q.high}</span></div>`;
+    h += '<div class="sc-row">' + [1,2,3,4,5].map(n =>
+      `<button class="sc-btn" data-n="${n}" data-v="${q.map[n]}" type="button">${n}</button>`
+    ).join('') + '</div>';
+    h += `<p class="sc-note">${q.note}</p>`;
+  }
+  con.innerHTML = h;
+  document.getElementById('q-next').disabled = true;
+  con.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+    con.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+    b.classList.add('sel'); answers[i] = {v: b.dataset.v};
+    document.getElementById('q-next').disabled = false;
+  }));
+  con.querySelectorAll('.sc-btn').forEach(b => b.addEventListener('click', () => {
+    con.querySelectorAll('.sc-btn').forEach(o => o.classList.remove('sel'));
+    b.classList.add('sel'); scaleRaw = +b.dataset.n; answers[i] = {v: b.dataset.v};
+    document.getElementById('q-next').disabled = false;
+  }));
+}
+
+function advanceQ() {
+  const con = document.getElementById('q-con');
+  con.classList.add('out');
+  setTimeout(() => {
+    cur++; setProgress(cur, QS.length);
+    if (cur < QS.length) {
+      con.classList.remove('out'); con.classList.add('coming');
+      renderQ(cur);
+      requestAnimationFrame(() => requestAnimationFrame(() => con.classList.remove('coming')));
+    } else { startProcessing(); }
+  }, 230);
+}
+
+function startProcessing() {
+  showScreen('s-proc'); setProgress(QS.length, QS.length);
+  const msgs = ['Reading your responses…','Identifying your priorities…','Composing your profile…'];
+  let mi = 0; const el = document.getElementById('proc-s');
+  const iv = setInterval(() => {
+    el.classList.add('fade');
+    setTimeout(() => { mi = (mi+1) % msgs.length; el.textContent = msgs[mi]; el.classList.remove('fade'); }, 360);
+  }, 950);
+  setTimeout(() => { clearInterval(iv); buildProfile(); }, 2800);
+}
+
+function buildProfile() {
+  const cnt = {S:0, C:0, N:0};
+  answers.slice(0,5).forEach(a => { if(a?.v) cnt[a.v]++; });
+  const maxC = Math.max(...Object.values(cnt), 1);
+  document.getElementById('pri-bars').innerHTML = ['S','C','N'].map(k => `
+    <div class="pri-row">
+      <span class="pri-nm">${PRI[k]}</span>
+      <div class="pri-tr"><div class="pri-fi" id="pfi-${k}"></div></div>
+      <span class="pri-ct">${cnt[k]}</span>
+    </div>`).join('');
+  showScreen('s-profile');
+  setTimeout(() => {
+    document.getElementById('pri-card').classList.add('vis');
+    setTimeout(() => { ['S','C','N'].forEach(k => { const el = document.getElementById('pfi-'+k); if(el) el.style.width = Math.round((cnt[k]/maxC)*100) + '%'; }); }, 200);
+  }, 350);
+  const para = generateParagraph(answers, scaleRaw||3);
+  const pw = document.getElementById('para-wrap'), pt = document.getElementById('para-text');
+  setTimeout(() => {
+    pw.classList.add('vis');
+    const words = para.split(' ');
+    pt.innerHTML = words.map(w => `<span class="wd">${w} </span>`).join('');
+    pt.querySelectorAll('.wd').forEach((s,i) => setTimeout(() => s.classList.add('vis'), i*32));
+    setTimeout(() => { document.getElementById('submit-btn').disabled = false; }, words.length*32 + 400);
+  }, 900);
+}
+
+function getKey() {
+  const c = {C:0, N:0, S:0};
+  answers.forEach(a => { if(a?.v) c[a.v]++; });
+  return Object.entries(c).sort((a,b) => b[1]-a[1])[0][0];
+}
+
+async function doSubmit() {
+  const key = getKey();
+  const para = generateParagraph(answers, scaleRaw||3);
+  const sub = {id: Date.now(), ts: new Date().toISOString(), tool: key, paragraph: para};
+
+  // Send to Google Sheets
+  if (SHEETS_URL) {
+    try {
+      fetch(SHEETS_URL, {method:'POST', mode:'no-cors', headers:{'Content-Type':'text/plain'}, body: JSON.stringify(sub)}).catch(() => {});
+    } catch(e) {}
+  }
+
+  // Local backup (falls back if Sheets not connected)
+  try {
+    const stored = localStorage.getItem('diag_backup');
+    const d = stored ? JSON.parse(stored) : {submissions:[]};
+    if (!Array.isArray(d.submissions)) d.submissions = [];
+    d.submissions.push(sub);
+    localStorage.setItem('diag_backup', JSON.stringify(d));
+  } catch(e) {}
+
+  showScreen('s-thanks');
+}
+
+function loadAdmin() {
+  // Sheets status banner
+  const ss = document.getElementById('sheets-status');
+  ss.innerHTML = SHEETS_URL
+    ? `<div class="sheets-banner connected"><span class="sheets-dot dot-green"></span>Google Sheets connected — responses are syncing automatically.</div>`
+    : `<div class="sheets-banner disconnected"><span class="sheets-dot dot-amber"></span>Google Sheets not yet connected. Paste your Apps Script URL into the SHEETS_URL field at the top of the script.</div>`;
+
+  // Load local backup data
+  let d = {submissions:[]};
+  try { const stored = localStorage.getItem('diag_backup'); if(stored) d = JSON.parse(stored); } catch(e) {}
+  const subs = d.submissions || [], n = subs.length;
+
+  document.getElementById('ad-meta').textContent = n === 0
+    ? 'No local responses recorded.' + (SHEETS_URL ? ' Check your Google Sheet directly for live submissions.' : '')
+    : `${n} response${n===1?'':'s'} in local backup.` + (SHEETS_URL ? ' Full data is in your Google Sheet.' : '');
+
+  const con = document.getElementById('ad-content');
+  if (n === 0) { con.innerHTML = `<div class="empty-m">${SHEETS_URL ? 'Submissions are going directly to your Google Sheet.<br>Open it to view responses.' : 'No staff have completed the diagnostic yet.'}</div>`; return; }
+
+  const cnt = {C:0, N:0, S:0};
+  subs.forEach(s => cnt[s.tool] = (cnt[s.tool]||0) + 1);
+  const pct = x => Math.round((x/n)*100), mx = Math.max(cnt.C, cnt.N, cnt.S, 1);
+
+  let h = `<div class="sg">
+    <div class="sc2"><p class="sv2">${n}</p><p class="sl2">Responses</p></div>
+    <div class="sc2"><p class="sv2">${pct(cnt.S)}%</p><p class="sl2">Spark</p></div>
+    <div class="sc2"><p class="sv2">${pct(cnt.N)}%</p><p class="sl2">NotebookLM</p></div>
+  </div><div class="ad-sec"><p class="ad-st">Tool match breakdown</p>`;
+  [['S','Spark'],['C','Claude'],['N','NotebookLM']].forEach(([k,nm]) => {
+    h += `<div class="b-row"><span class="b-nm">${nm}</span><div class="b-tr"><div class="b-fi" style="width:${Math.round((cnt[k]||0)/mx*100)}%"></div></div><span class="b-pc">${pct(cnt[k]||0)}%</span></div>`;
+  });
+  h += `</div><div class="ad-sec"><p class="ad-st">Individual submissions</p>`;
+  [...subs].reverse().forEach(sub => {
+    const b = BADGE[sub.tool];
+    const dt = new Date(sub.ts);
+    const ds = dt.toLocaleDateString('en-AU',{day:'numeric',month:'short',year:'numeric'}) + ' · ' + dt.toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit'});
+    h += `<div class="sub-item"><div class="sub-hd2"><span class="sub-badge ${b.cls}">${b.label}</span><span class="sub-ts">${ds}</span><button class="sub-del" data-id="${sub.id}">Remove</button></div><div class="sub-body2"><p class="sub-para">${sub.paragraph||''}</p></div></div>`;
+  });
+  h += `</div><button class="rlnk" id="rlnk">Clear local backup data</button>`;
+  con.innerHTML = h;
+  con.querySelectorAll('.sub-del').forEach(b => b.addEventListener('click', () => {
+    const id = parseInt(b.dataset.id);
+    d.submissions = d.submissions.filter(s => s.id !== id);
+    localStorage.setItem('diag_backup', JSON.stringify(d));
+    loadAdmin();
+  }));
+  document.getElementById('rlnk').addEventListener('click', () => {
+    if (confirm('Clear all local backup data?')) { localStorage.removeItem('diag_backup'); loadAdmin(); }
+  });
+}
+
+function tryLogin() {
+  if (document.getElementById('al-pw').value === PASS) {
+    document.getElementById('al-err').textContent = '';
+    showScreen('s-admin'); loadAdmin();
+  } else {
+    document.getElementById('al-err').textContent = 'Incorrect password. Please try again.';
+    document.getElementById('al-pw').value = ''; document.getElementById('al-pw').focus();
+  }
+}
+
+document.getElementById('start-btn').addEventListener('click', () => { showScreen('s-quiz'); renderQ(0); setProgress(0, QS.length); });
+document.getElementById('q-next').addEventListener('click', advanceQ);
+document.getElementById('submit-btn').addEventListener('click', doSubmit);
+document.getElementById('restart-btn').addEventListener('click', () => { answers=[]; scaleRaw=null; cur=0; showScreen('s-intro'); setProgress(0, QS.length); });
+document.getElementById('admin-lnk').addEventListener('click', () => { document.getElementById('al-err').textContent=''; document.getElementById('al-pw').value=''; showScreen('s-adminlogin'); setTimeout(() => document.getElementById('al-pw').focus(), 300); });
+document.getElementById('al-cancel').addEventListener('click', () => showScreen('s-intro'));
+document.getElementById('ad-out').addEventListener('click', () => showScreen('s-intro'));
+document.getElementById('al-go').addEventListener('click', tryLogin);
+document.getElementById('al-pw').addEventListener('keydown', e => { if(e.key === 'Enter') tryLogin(); });
+
+showScreen('s-intro');
+</script>
+</body>
+</html>
